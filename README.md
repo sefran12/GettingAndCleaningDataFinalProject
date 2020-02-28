@@ -27,3 +27,84 @@ Fine details on the workings of the script are in the CodeBook.md file, but, qui
 3) reads the data into memory, reads and parses the .txt files as fixed width tables
 4) cleans and merges the data and finally, clarifies the structure of the tables, merges train and test sets, creates auxiliary columns, cleans variable names and creates derived, summary data sets.
 5) saves the data to an external file, for the peer-grading requirements of Coursera
+
+## Transformations made to the data
+
+### Data preparation
+
+The script first checks for the existence of a directory for our final project, and if not present, it creates one. Later, checks if the .zip is already present, if not, downloads the relevant data and unzips it. I know there is some redundancy in the folder structure but I can't still get it to unzip just the contents of the redundant directory, If the program detects this is done, it does not do it again and continues to the next step.
+
+### Loading data
+
+ If you see the resulting directories, there are multitude of .txt files. I did the work of going one by one to see what each one was about: 
+ First there is label data, then the data itself divided in testing set and training set each in its own file, with its associated subjects   in its own file.
+ NOTE: The folders on inertial signals will be discarded later by the exercise
+ itself so we don't concern ourselves with them.
+ NOTE 2: There are many, many features, so a "by-hand" variable naming scheme is probably not a good idea. I guess what we need to do is programmatically cook some (more) descriptive names for the variables. We're lucky the data is  regular enough for simple tricks to be enough
+
+### DATABASE CONSTRUCTION 
+
+ First, let's assign variable names according to our source material. I prefer doing it all two times (before the merge) to lessen the chance that  I overlook something and the merge ends up with some subtle error.  Better to tidyly merge two tidy datasets than tidying a dirty merged dataset. Now, let's convert our activity data into factors with the corresponding labels according to 'activity_labels'. Casting it directly with 'factor' leaves us with a factor vector. I force a data.frame and name the variable.
+
+ Now we can peacefully merge subject, X, and y
+
+ Then, I consider important remembering from where (of the crossvalidation step)
+ does the data come from (in general, although in this exercise it does not matter):
+
+### MERGING DATASETS 
+
+ We 'merge' (that is, append the records of one to the other) the data sets to end up
+ with the final data set.
+
+ We can now touch up some little details we left out in the data
+
+ Tidying up we got with the suprise that there are duplicated column names
+ that come from the very source material 'feature_names.txt':
+
+ We fix this with repair_names(). No measures with mean or std are affected so there's no
+ cause for confusion.
+
+ We select either:
+
+ OPTION 1: Everything that has 'mean' or 'std' in its name is selected, or
+
+ OPTION 2: Only variables with calculated mean() and std() in their names are selected
+
+ This feels more consistent, as it seems conceptually more correct to think
+ that this:
+ "Extracts only the measurements on the mean and standard deviation for each measurement."
+ meant all .mean() and std() (derived measures) than selecting
+ simply those which happen to have mean or std in their names.
+
+### DERIVED DATASETS 
+
+ We calculate the derived measure means by subject and activity. This produces means of means
+ and means of standard errors but this makes sense in a bayesian context.
+
+### DESCRIPTIVE NAMES:
+
+ Finally, given that the feature names are relatively expressive, we can
+ clarify that t is time domain, acc is acceleration, Gyro is angular acceleration (gyroscope)
+ f is frequency domain and Mag is magnitude. We do this with regular expressions.
+ We also standarize the colnames as per usual R conventions. I know the prof. uses sometimes
+ dots in the names (as in Google's R style guide) and discourages "_" in colnames but the
+ R style guide itself separating with _ in names is encouraged, so I replace camelCase with
+ underscore_separation and replace '-' with '_'
+ 
+### EXPORTING DATA:
+
+ It is not clear which data set we must upload to coursera so we save both.
+ We write to .csv because parsing is usually easier and there is no
+ possibility of mistaking the comma with some comma in the data.
+
+ As the summary_data is the result of more transformations
+ than the final_HAR_data, I assume that this is what we
+ should upload to Coursera to show our work.
+
+# Technical details
+
+Only base R and the tidyverse is used throughout the script. I suppose there are better ways of expressing
+the regular expressions used when modifying the column names but they are good enough as they are.
+I guess a slightly different reordering of the transformation steps would've been better in terms
+of time and memory but the data set is small enough for it to not matter.
+
